@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+	Alert,
 	ScrollView,
 	Text,
 	TextInput,
@@ -10,6 +11,7 @@ import { Feather } from '@expo/vector-icons';
 import { BackButton } from '../components/BackButton';
 import { Checkbox } from '../components/Checkbox';
 import colors from 'tailwindcss/colors';
+import { api } from '../lib/axios';
 
 const availableWeekDays = [
 	'Domingo',
@@ -22,6 +24,7 @@ const availableWeekDays = [
 ];
 
 export const New = () => {
+	const [name, setName] = useState<string>('');
 	const [weekDays, setWeekDays] = useState<number[]>([]);
 
 	const handleToggleWeekDay = (weekDayIndex: number) => {
@@ -31,6 +34,29 @@ export const New = () => {
 			);
 		} else {
 			setWeekDays((prevState) => [...prevState, weekDayIndex]);
+		}
+	};
+
+	const handleCreateHabit = async () => {
+		try {
+			if (!name.trim() || weekDays.length === 0) {
+				return Alert.alert(
+					'Ops',
+					'Você precisa informar o nome do hábito e escolher ao menos um dia da semana.'
+				);
+			}
+
+			await api.post('/habits', {
+				name,
+				weekDays
+			});
+
+			Alert.alert('Novo Hábito', 'Hábito criado com sucesso!');
+			setName('');
+			setWeekDays([]);
+		} catch (error) {
+			Alert.alert('Ops', 'Ocorreu um erro ao criar seu novo hábito.');
+			console.log(error);
 		}
 	};
 
@@ -52,6 +78,8 @@ export const New = () => {
 					className="h-12 pl-4 rounded-lg mt-3 bg-zinc-900 text-white border-2 border-zinc-800 focus:border-green-600"
 					placeholder="Ex.: academia, dormir cedo, etc..."
 					placeholderTextColor={colors.zinc[400]}
+					onChangeText={(text) => setName(text)}
+					value={name}
 				/>
 
 				<Text className="font-semibold mt-4 mb-3 text-white text-base">
@@ -69,6 +97,7 @@ export const New = () => {
 				<TouchableOpacity
 					activeOpacity={0.7}
 					className="w-full h-14 flex-row items-center justify-center bg-green-600 rounded-md mt-6"
+					onPress={handleCreateHabit}
 				>
 					<Feather name="check" size={20} color={colors.white} />
 					<Text className="font-semibold text-base text-white ml-2">
